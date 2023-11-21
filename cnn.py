@@ -207,28 +207,126 @@ for K in range(0, iteraciones):
     
     ############# DEPURAR #############    
     
-    Xop = np.zeros((28,28))
-    for i in range(28):
-        for j in range(28):
-            Xop[i][j] = i + (27 * j) 
-    X0 = Xop  
+    if depurar == 1:
+        Xop = np.zeros((28,28))
+        #X0 test
+        # 
+        #           Ciclos for para probar el código
+        #
+        for i in range(28):
+            for j in range(28):
+                Xop[i,j] = i + j * 28
+        X0_test = Xop
+        X0 = Xop
+
+        cfil = 3e-4
+        c1 = c1*1e-3
+        Wop = np.zeros((9,9,1,10))
+        for k1 in range(1):
+            for p1 in range(10):
+                for i1 in range(9):
+                    for j1 in range(9):
+                        Wop[i1,j1,k1,p1] = i1 + 8 * j1
+        W0 = Wop*cfil
+
+        W1p = np.zeros((5,5,10,10))
+        for k1 in range(10):
+            for p1 in range(10):
+                for i1 in range(5):
+                    for j1 in range(5):
+                        W1p[i1,j1,k1,p1] = i1 + 4 * j1
+        W1 = W1p*cfil
+
+        W2p = np.zeros((3,3,10,10))
+        for k1 in range(10):
+            for p1 in range(10):
+                for i1 in range(3):
+                    for j1 in range(3):
+                        W2p[i1,j1,k1,p1] = i1 + 2 * j1
+        W2 = W2p*cfil
+
+        W3p = np.zeros((100,1960))
+        for ki in range (100):
+            for kj in range(1960):
+                W3p[ki,kj] = ki + kj*10
+        W3 = W3p*cfil
+
+        W4p = np.zeros((100,100))
+        for ki in range (100):
+            for kj in range(100):
+                W4p[ki,kj] = ki + kj*10
+        W4 = W4p*cfil
+
+        W5p = np.zeros((10,100))
+        for ki in range (10):
+            for kj in range(100):
+                W5p[ki,kj] = ki + kj*10
+        W5 = W5p*cfil
+        B0 = 0*B0
+        B1 = 0*B1
+        B2 = 0*B2
+        B3 = 0*B3
+        B4 = 0*B4
+        B5 = 0*B5
+
+        W0 = W0 - 0.0108
+        W1 = W1 - 0.003
+        W2 = W2 - 9.0000e-04
+        W3 = W3 - 2.9534
+        W4 = W4 - 0.1633
+        W5 = W5 - 0.1498
+
+        # Prueba dos pesos
+        W0p = np.zeros((9*9*1*10,1))
+        W1p = np.zeros((5*5*10*10,1))
+        W2p = np.zeros((3*3*10*10,1))
+        W3p = np.zeros((100*1960,1))
+        W4p = np.zeros((100*100,1))
+        W5p = np.zeros((10*100,1))
+
+        for k1 in range(9*9*1*10):
+            W0p[k1] = k1
+        for k1 in range(5*5*10*10):
+            W1p[k1] = k1
+        for k1 in range(3*3*10*10):
+            W2p[k1] = k1
+        for k1 in range(100*1960):
+            W3p[k1] = k1
+        for k1 in range(100*100):
+            W4p[k1] = k1
+        for k1 in range(10*100):
+            W5p[k1] = k1
+
+        W0 = np.reshape(W0p,(9,9,1,10),order='F')
+        W0 = W0*cfil
+        W1 = np.reshape(W1p,(5,5,10,10),order='F')
+        W1 = W1*cfil
+        W2 = np.reshape(W2p,(3,3,10,10),order='F')
+        W2 = W2*cfil
+        W3 = np.reshape(W3p,(100,1960),order='F')
+        W3 = W3*cfil
+        W4 = np.reshape(W4p,(100,100),order='F')
+        W4 = W4*cfil
+        W5 = np.reshape(W5p,(10,100),order='F')
+        W5 = W5*cfil
+
+        W0 = W0 - 0.1213
+        W1 = W1 - 0.3748
+        W2 = W2 - 0.1348
+        W3 = W3 - 29.3998
+        W4 = W4 - 1.4998
+        W5 = W5 - 0.1498
+        #print(W2[0:3,0:3,4,4])
+        #break
+        #'''
 
     plt.imshow(X0, cmap='gray')
     plt.title(f'Primera imagen {sp}')
     # plt.show()
 
-
-    W0P = np.zeros((9,9,1,10))
-
-    for i in range(9):
-        for j in range(9):
-            for k in range(1):
-                for l in range(10):
-                    W0P[i][j][k][l] = i + (8 * j) 
-    
-    # W0 = W0P
-
     #Primera capa
+    Y0 = np.reshape(Y0, (20,20,10))
+    X1 = np.reshape(X1, (20,20,10))
         
     contador = 0
         
@@ -271,29 +369,21 @@ for K in range(0, iteraciones):
             contador = contador + 1
 
         #Convertimos Y0 a una dimension de 20x20x10
-        Y0 = Y0.reshape(20,20,10)
+        # Y0 = Y0.reshape(20,20,10)
         
         #Convertimos X1 a una dimension de 20x20x10
-        X1 = X1.reshape(20,20,10)
+        # X1 = X1.reshape(20,20,10)
         
             
         Y0[:, :, km] = np.maximum(sm1 + B0[km], 0)
         X1[:, :, km] = Y0[:, :, km]
 
-
-
     contador = 0;
     
-    W1P = np.zeros((5,5,10,10))
-
-    for i in range(5):
-        for j in range(5):
-            for k in range(10):
-                for l in range(10):
-                    W1P[i][j][k][l] = i + (4 * j) 
+    #normalizacion 
+    sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))    
     
-    # W1 = W1P
-
+    
     #Segunda capa 
 
     for km in range(cnn_M1): 
@@ -338,16 +428,6 @@ for K in range(0, iteraciones):
         X2[:, :, km-1] = Y1[:, :, km-1]
 
     contador = 0
-    
-    W2P = np.zeros((3,3,10,10))
-    
-    for i in range(3):
-        for j in range(3):
-            for k in range(10):
-                for l in range(10):
-                    W2P[i][j][k][l] = i + (2 * j)
-    
-    # W2 = W2P
     
     #Tercera capa
 
