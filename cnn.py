@@ -11,6 +11,7 @@ import random
 import math
 import pickle
 
+depurar = 1
 
 # Funcion switch para las etiquetas de las imagenes de entrada
 def switch_yd(yd):
@@ -71,13 +72,18 @@ c1 = 1e-5  # Constant for adjusting the output layer of the CNN
 test_set = 0     # Flag to select between training the CNN or only test the CNN
 sobre_train = 0  # Flag to train the CNN from the actual kernels and synaptic weights instead of random values
 
-# Rest of your Python code goes here
 
 if test_set == 0:
     if sobre_train == 0:
-        cnn_D0, cnn_M0 = 1, 10
-        cnn_D1, cnn_M1 = cnn_M0, 10
-        cnn_D2, cnn_M2 = cnn_M1, 10
+        # cnn_D0, cnn_M0 = 1, 10
+        # cnn_D1, cnn_M1 = cnn_M0, 10
+        # cnn_D2, cnn_M2 = cnn_M1, 10
+        cnn_M0 = 10
+        cnn_M1 = 10
+        cnn_M2 = 10
+        cnn_D0 = 1
+        cnn_D1 = cnn_M0
+        cnn_D2 = cnn_M1
 
         X0, Y0, W0, B0 = layer_CNN(1, cnn_M0, cnn_D0, 28, 9, 1) #Se elimino el penultimo parametro
         X1, Y1, W1, B1 = layer_CNN(1, cnn_D1, cnn_M1, 20, 5, 1) #Se elimino R1
@@ -133,9 +139,14 @@ for K in range(0, iteraciones):
         # print(sp)
         digit = Amnist[sp-1]   # Obtiene la imagen de entrada (sp-1) porque los indices empiezan en 0
         X0 = digit.reshape(28, 28)
+        #Normalizamos 
+        X0 = X0 / 255 #--mejora
         
         #Obtenemos la etiqueta de la imagen de entrada
         yd = y[sp-1] # (sp-1) porque los indices empiezan en 0
+        
+        if depurar == 1: 
+            yd = 0 #--mejora
         
         # switch de la etiqueta de la imagen de entrada del 1 al 10
         yd_trt = switch_yd(yd)
@@ -147,7 +158,7 @@ for K in range(0, iteraciones):
             print("Invalid yd value")
         
         YD = yd_trt
-        
+        YD = np.reshape(YD, (-1,1)) #Convertimos YD a una dimension de 10x1 --Mejora
         
         try_nan=1; #Terminamos el while
         
@@ -161,10 +172,14 @@ for K in range(0, iteraciones):
         # print(sp_test)
         digit = Bmnist[sp_test-1]   # Obtiene la imagen de entrada (sp-1) porque los indices empiezan en 0
         X0_test = digit.reshape(28, 28)
-
+        #Normalizamos 
+        X0_test = X0_test / 255 #--mejora
         
         #Obtenemos la etiqueta de la imagen de entrada
         yd = y_test[sp_test-1] # (sp-1) porque los indices empiezan en 0
+        
+        if depurar == 1:
+            yd = 0 #--mejora
         
         # switch de la etiqueta de la imagen de entrada del 1 al 10
         yd_trt = switch_yd(yd)
@@ -176,10 +191,11 @@ for K in range(0, iteraciones):
             print("Invalid yd value")
         
         YD_test = yd_trt
+        YD_test = np.reshape(YD_test, (-1,1)) #Convertimos YD a una dimension de 10x1 --Mejora
         
         try_nan=1; #Terminamos el while
         
-        
+
 
     # Asignar el valor de sp a sourc en la fila K y columna 1 (índices basados en 0)
     sourc[K][0] = sp
@@ -189,6 +205,7 @@ for K in range(0, iteraciones):
     
     # Test run of the CNN
     
+    ############# DEPURAR #############    
     
     Xop = np.zeros((28,28))
     for i in range(28):
@@ -244,7 +261,7 @@ for K in range(0, iteraciones):
 
             
             #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
-            sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))
+            # sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1)) #Normalizacion se mueve al inicio
             
             if(contador == 9):
                 plt.imshow(sm1, cmap='gray')
