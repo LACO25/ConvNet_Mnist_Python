@@ -11,7 +11,7 @@ import random
 import math
 import pickle
 
-depurar = 1
+depurar = 0
 
 # Funcion switch para las etiquetas de las imagenes de entrada
 def switch_yd(yd):
@@ -65,7 +65,7 @@ except Exception as e:
     print("Archivos de datos cargados nuevamente.")
 
 # Variable initialization
-LR = 1e-2  # Initial learning rate
+LR = 1e-3  # Initial learning rate
 MT = 100   # Loss function modifier for backpropagation algorithm
 c1 = 1e-5  # Constant for adjusting the output layer of the CNN
 
@@ -385,6 +385,9 @@ for K in range(0, iteraciones):
     
     
     #Segunda capa 
+    
+    Y1 = Y1.reshape(16,16,10)
+    X2 = X2.reshape(16,16,10)
 
     for km in range(cnn_M1): 
         #inicializamos sm1 con una matriz de ceros de 16x16
@@ -404,10 +407,6 @@ for K in range(0, iteraciones):
             #     plt.title(f'Segunda Capa SN {km}')
             #     plt.show()
 
-
-            #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
-            sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))
-            
             if(contador == 99):
                 plt.imshow(sm1, cmap='gray')
                 plt.title(f'Segunda Capa N {km}')
@@ -416,20 +415,20 @@ for K in range(0, iteraciones):
             #aumentamos el contador 
             contador = contador + 1
 
-        
-        #Convertimos Y0 a una dimension de 16x16x10
-        Y1 = Y1.reshape(16,16,10)
-        
-        #Convertimos X1 a una dimension de 16x16x10
-        X2 = X2.reshape(16,16,10)
-
         # Calcula Y1[:,:,km] = max(sm1 + B1(km), 0)
         Y1[:, :, km-1] = np.maximum(sm1 + B1[km-1], 0)
         X2[:, :, km-1] = Y1[:, :, km-1]
 
+    #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
+    sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))
+            
+
     contador = 0
     
     #Tercera capa
+    # Aplicamos reshape a Y2 para que tenga una dimension de 14x14x10
+    Y2 = Y2.reshape(14,14,10)
+    X3 = X3.reshape(14,14,10)
 
     for km in range(cnn_M2):
         #inicializamos sm2 con una matriz de ceros de 14x14
@@ -451,7 +450,7 @@ for K in range(0, iteraciones):
 
 
             #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
-            sm2 = (sm2 - np.min(sm2))/(np.max(sm2)-np.min(sm2))
+            # sm2 = (sm2 - np.min(sm2))/(np.max(sm2)-np.min(sm2))
             
             if(contador == 99):
                 plt.imshow(sm2, cmap='gray')
@@ -461,9 +460,6 @@ for K in range(0, iteraciones):
             #aumentamos el contador
             contador = contador + 1
             
-        # Aplicamos reshape a Y2 para que tenga una dimension de 14x14x10
-        Y2 = Y2.reshape(14,14,10)
-
         # Calcula Y2[:,:,km] = max(sm2 + B2(km), 0)
         Y2[:, :, km-1] = np.maximum(sm2 + B2[km-1], 0)
 
@@ -490,34 +486,45 @@ for K in range(0, iteraciones):
     # plt.show()
 
     # Convertir Y2 a una dimension de 1960x1
-    X3 = Y2.reshape((1960, 1), order='F') #1960x1
+    # X3 = Y2.reshape((1960, 1), order='F') #1960x1
+    X3 = np.reshape(np.transpose(Y2), (-1,1))
     
-    X3g = X3 #1960x1
-    W3g = W3 #100x1960
-    Y3g = np.dot(W3g, X3g) #100x1
-    Y3 = Y3g
+    # X3g = X3 #1960x1
+    # W3g = W3 #100x1960
+    # Y3g = np.dot(W3g, X3g) #100x1
+    # Y3 = Y3g
+    # Y3 = np.maximum(Y3 + 1.0 * B3, 0) #Elimina los negativos
+    
+    Y3 = W3@X3
     Y3 = np.maximum(Y3 + 1.0 * B3, 0) #Elimina los negativos
     
     # Capa 4
     X4 = Y3
-    X4g = X4
-    W4g = W4
-    Y4g = np.dot(W4g, X4g) #100x1
-    Y4 = Y4g
+    # X4g = X4
+    # W4g = W4
+    # Y4g = np.dot(W4g, X4g) #100x1
+    # Y4 = Y4g
+    # Y4 = np.maximum(Y4 + 1.0 * B4, 0)
+    Y4 = W4@X4
     Y4 = np.maximum(Y4 + 1.0 * B4, 0)
     
     # Capa 5
     X5 = Y4
-    X5g = X5
-    W5g = W5
-    Y5g = np.dot(W5g, X5g)
-    Y5 = Y5g
+    # X5g = X5
+    # W5g = W5
+    # Y5g = np.dot(W5g, X5g)
+    # Y5 = Y5g
+    Y5 = W5@X5
+    
     
     # Normalización sigmoidal en la capa 5 (asumiendo c1 y B5)
-    Y5 = np.exp(c1 * (Y5 + B5))
-    Y5 /= np.sum(Y5)
+    # Y5 = np.exp(c1 * (Y5 + B5))
+    # Y5 /= np.sum(Y5)
     
     # Calcular el error en función de YD y Y5
+    # E[K] = 0.5 * np.mean((YD - Y5)**2)
+
+    Y5 = np.exp(c1 * (Y5 + B5)) / np.sum(np.exp(c1 * (Y5 + B5)))#softmax
     E[K] = 0.5 * np.mean((YD - Y5)**2)
 
     # Test CNN
@@ -529,6 +536,12 @@ for K in range(0, iteraciones):
 
     #Primera capa
     contador = 0
+    
+    #Convertimos Y0 a una dimension de 20x20x10
+    Y0 = Y0.reshape(20,20,10)       
+    #Convertimos X1 a una dimension de 20x20x10
+    X1 = X1.reshape(20,20,10)
+        
         
     # Recorremos un bucle en el rango de cnn_M0 (10)
     for km in range(cnn_M0): # cnn_M0 = 10
@@ -560,10 +573,6 @@ for K in range(0, iteraciones):
             #     plt.title(f'Primera Capa SN {km}')
             #     plt.show()
 
-            
-            #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
-            sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))
-            
             # if(contador == 9):
             #     plt.imshow(sm1, cmap='gray')
             #     plt.title(f'Primera Capa Test N {km}')
@@ -571,22 +580,22 @@ for K in range(0, iteraciones):
                 
             contador = contador + 1
             
-        #Convertimos Y0 a una dimension de 20x20x10
-        Y0 = Y0.reshape(20,20,10)
-        
-        # print("X1")
-        # print(X1.shape)
-        # print(X1)
-        
-        #Convertimos X1 a una dimension de 20x20x10
-        X1 = X1.reshape(20,20,10)
-        
         Y0[:, :, km] = np.maximum(sm1 + B0[km], 0)
         X1[:, :, km] = Y0[:, :, km]
+        
+    #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
+    sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))      
 
         
     #Segunda capa
     contador = 0;
+    
+    #Convertimos Y0 a una dimension de 16x16x10
+    Y1 = Y1.reshape(16,16,10)
+    
+    #Convertimos X1 a una dimension de 16x16x10
+    X2 = X2.reshape(16,16,10)
+    
 
     for km in range(cnn_M1): 
         #inicializamos sm1 con una matriz de ceros de 16x16
@@ -606,30 +615,28 @@ for K in range(0, iteraciones):
             #     plt.title(f'Segunda Capa SN {km}')
             #     plt.show()
 
-            #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
-            sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))
-            
-            if(contador == 99):
-                plt.imshow(sm1, cmap='gray')
-                plt.title(f'Segunda Capa Test N {km}')
+            # if(contador == 99):
+            #     plt.imshow(sm1, cmap='gray')
+            #     plt.title(f'Segunda Capa Test N {km}')
                 # plt.show()
             
             #aumentamos el contador 
             contador = contador + 1
 
-        #Convertimos Y0 a una dimension de 16x16x10
-        Y1 = Y1.reshape(16,16,10)
-        
-        #Convertimos X1 a una dimension de 16x16x10
-        X2 = X2.reshape(16,16,10)
-
         # Calcula Y1[:,:,km] = max(sm1 + B1(km), 0)
         Y1[:, :, km-1] = np.maximum(sm1 + B1[km-1], 0)
         X2[:, :, km-1] = Y1[:, :, km-1]
-        
+    
+    #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
+    sm1 = (sm1 - np.min(sm1))/(np.max(sm1)-np.min(sm1))
+            
     
     #Tercera Capa
     contador = 0
+    
+    # Aplicamos reshape a Y2 para que tenga una dimension de 14x14x10
+    Y2 = Y2.reshape(14,14,10)
+    X3 = X3.reshape(14,14,10)
     
     for km in range(cnn_M2):
         #inicializamos sm2 con una matriz de ceros de 14x14
@@ -650,81 +657,126 @@ for K in range(0, iteraciones):
             #         plt.show()
 
 
-            #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
-            sm2 = (sm2 - np.min(sm2))/(np.max(sm2)-np.min(sm2))
-            
-            if(contador == 99):
-                plt.imshow(sm2, cmap='gray')
-                plt.title(f'Tercera Capa Test N {km}')
-                # plt.show()
+            # if(contador == 99):
+            #     plt.imshow(sm2, cmap='gray')
+            #     plt.title(f'Tercera Capa Test N {km}')
+            #     # plt.show()
 
             #aumentamos el contador
-            contador = contador + 1
-            
-        # Aplicamos reshape a Y2 para que tenga una dimension de 14x14x10
-        Y2 = Y2.reshape(14,14,10)
-
+            contador = contador + 1 
+        
         # Calcula Y2[:,:,km] = max(sm2 + B2(km), 0)
         Y2[:, :, km-1] = np.maximum(sm2 + B2[km-1], 0)
 
+    #Normalizamos sm1 = (sm1 -min(sm1))/(max(sm1)-min(sm1))
+    # sm2 = (sm2 - np.min(sm2))/(np.max(sm2)-np.min(sm2))
+            
     plt.imshow(Y2[:, :, km-1], cmap='gray')
     plt.title(f'Y2 Test {km}')
     # plt.show()
 
     # Convertir Y2 a una dimension de 1960x1
-    X3 = Y2.reshape((1960, 1), order='F')
+    #X3 = Y2.reshape((1960, 1), order='F')
+    # X3 = np.reshape(np.transpose(Y2), (-1,1))
     
-    X3g = X3
-    W3g = W3
-    Y3g = np.dot(W3g, X3g) #100x1    
-    Y3 = Y3g
+    # X3g = X3
+    # W3g = W3
+    # Y3g = np.dot(W3g, X3g) #100x1    
+    # Y3 = Y3g
+    # Y3 = np.maximum(Y3 + 1.0 * B3, 0) #Elimina los negativos
+
+    # # Capa 4
+    # X4 = Y3 #100x1
+    # X4g = X4
+    # W4g = W4
+    # Y4g = np.dot(W4g, X4g) #100x1
+    # Y4 = Y4g
+    # Y4 = np.maximum(Y4 + 1.0 * B4, 0)
+
+    # # Capa 5
+    # X5 = Y4
+    # X5g = X5
+    # W5g = W5
+    # Y5g = np.dot(W5g, X5g)
+    # Y5 = Y5g
+
+
+    # X3 = Y2.reshape((1960, 1), order='F') #1960x1
+    X3 = np.reshape(np.transpose(Y2), (-1,1))
+    
+    # X3g = X3 #1960x1
+    # W3g = W3 #100x1960
+    # Y3g = np.dot(W3g, X3g) #100x1
+    # Y3 = Y3g
+    # Y3 = np.maximum(Y3 + 1.0 * B3, 0) #Elimina los negativos
+    
+    Y3 = W3@X3
     Y3 = np.maximum(Y3 + 1.0 * B3, 0) #Elimina los negativos
-
+    
     # Capa 4
-    X4 = Y3 #100x1
-    X4g = X4
-    W4g = W4
-    Y4g = np.dot(W4g, X4g) #100x1
-    Y4 = Y4g
+    X4 = Y3
+    # X4g = X4
+    # W4g = W4
+    # Y4g = np.dot(W4g, X4g) #100x1
+    # Y4 = Y4g
+    # Y4 = np.maximum(Y4 + 1.0 * B4, 0)
+    Y4 = W4@X4
     Y4 = np.maximum(Y4 + 1.0 * B4, 0)
-
+    
     # Capa 5
     X5 = Y4
-    X5g = X5
-    W5g = W5
-    Y5g = np.dot(W5g, X5g)
-    Y5 = Y5g
+    # X5g = X5
+    # W5g = W5
+    # Y5g = np.dot(W5g, X5g)
+    # Y5 = Y5g
+    Y5 = W5@X5
+    
+    
+    # Normalización sigmoidal en la capa 5 (asumiendo c1 y B5)
+    # Y5 = np.exp(c1 * (Y5 + B5))
+    # Y5 /= np.sum(Y5)
+    
+    # Calcular el error en función de YD y Y5
+    # E[K] = 0.5 * np.mean((YD - Y5)**2)
+
+    Y5 = np.exp(c1 * (Y5 + B5)) / np.sum(np.exp(c1 * (Y5 + B5)))#softmax
+    Etest[K] = 0.5 * np.mean((YD_test - Y5)**2)
+
     
     # Y5 = (1 + np.exp(c1 * (-Y5 - B5))) ** -1
-    Y5_past = Y5
-    Y5 = np.exp(c1 * (Y5 + B5)) / np.sum(np.exp(c1 * (Y5 + B5)))
+    # Y5_past = Y5
+    # Y5 = np.exp(c1 * (Y5 + B5)) / np.sum(np.exp(c1 * (Y5 + B5)))
 
     #if sl == 1:
+    # YD_neg = YD_test
+    # Y5_neg = Y5
+
+    # Etest[K] = 0.5 * np.mean((YD_test - Y5) ** 2)
+    
     YD_neg = YD_test
     Y5_neg = Y5
 
-    Etest[K] = 0.5 * np.mean((YD_test - Y5) ** 2)
+    # Y5 = Y5.reshape(10)
     
-    Y5 = Y5.reshape(10)
-    
-    yCNN[:, K] = Y5 #Salida de la CNN (Resultado)
-    yDPN[:, K] = YD_test #Resultado real
+    # yCNN[:, K] = Y5 #Salida de la CNN (Resultado)
+    # yDPN[:, K] = YD_test #Resultado real
 
     # Visualization of the training process
     # print("if")
     if (K) % 1000 == 999: #Entra cada 1000 iteraciones
-        print((K ) % 1000)
+        #print((K ) % 1000)
         Q1 = E[K - 999:K]
         Q2 = Etest[K - 999:K]
+        print('Error: ', np.mean(Q1), np.mean(Q2), K)
         
-        print("K-999")
-        print(K - 999)
+        # print("K-999")
+        # print(K - 999)
         
-        print("Q1")
-        print(Q1)
+        # print("Q1")
+        # print(Q1)
         
-        print("Q2")
-        print(Q2)
+        # print("Q2")
+        # print(Q2)
 
     #Propagacion del error
     # print("Propagacion del error")
@@ -738,41 +790,49 @@ for K in range(0, iteraciones):
         dC5 = dE5 * dF5 # 10x1
         
         #Aplicamos reshape a DC5 para que tenga una dimension de 10x1
-        dC5 = dC5.reshape(10,1) # 10x1
+        #dC5 = dC5.reshape(10,1) # 10x1
         
-        dC5g = dC5 # 10x1
+        #dC5g = dC5 # 10x1
         #dW5 = -LR * np.dot(X5.T, dC5)
-        dW5 = -LR * np.dot(dC5, X5.T) #  10x1 * 1x100  O 100x1 * 1x10
+        #dW5 = -LR * np.dot(dC5, X5.T) #  10x1 * 1x100  O 100x1 * 1x10
+        dW5 = -LR * (dC5 @ np.transpose(X5)) # 10x1 * 1x100  O 100x1 * 1x10
         dB5 = -LR * dC5 # 10x1
         
-        dE4g = np.dot(W5g.T, dC5g)  # propagacion  # 100x10(T) 10x1
-        dE4 = dE4g #100x1
+        #dE4g = np.dot(W5g.T, dC5g)  # propagacion  # 100x10(T) 10x1
+        # dE4 = dE4g #100x1
+        dE4 = np.transpose(W5) @ dC5 # 100x10(T) 10x1
         dF4 = np.sign(Y4) #(100x1)
         dC4 = dE4 * dF4 #100x1
         
-        dC4g = dC4 #100x1
+        # dC4g = dC4 #100x1
         
-        dW4g = np.dot(dC4g, X4g.T) #100x1 * 1x100
-        dW4 = dW4g #100x100
-        dW4 = -LR * dW4 #100x100
+        # dW4g = np.dot(dC4g, X4g.T) #100x1 * 1x100
+        # dW4 = dW4g #100x100
+        dW4 = -LR * (dC4 @ np.transpose(X4)) #100x1 * 1x100
+        # dW4 = -LR * dW4 #100x100
         dB4 = -LR * dC4 #100x1
         
-        dE3g = np.dot(W4g.T, dC4g) #100x100(T) 100x1 = 100x1
-        dE3 = dE3g #100x1
+        # dE3g = np.dot(W4g.T, dC4g) #100x100(T) 100x1 = 100x1
+        # dE3 = dE3g #100x1
+        dE3 = np.transpose(W4) @ dC4 #100x100(T) 100x1 = 100x1
         dF3 = np.sign(Y3) #100x1
         dC3 = dE3 * dF3 #100x1
         
-        dC3g = dC3 #100x1
+        # dC3g = dC3 #100x1
         
-        dW3g = np.dot(dC3g, X3g.T) #100x1 * 1x1960
-        dW3 = dW3g #100x1960
-        dW3 = -LR * dW3 #100x1960
+        # dW3g = np.dot(dC3g, X3g.T) #100x1 * 1x1960
+        # dW3 = dW3g #100x1960
+        # dW3 = -LR * dW3 #100x1960
+        dW3 = -LR * (dC3 @ np.transpose(X3)) #100x1 * 1x1960
         dB3 = -LR * dC3 #100x1 
 
-        dE2fg = np.dot(W3g.T, dC3g) #1960x100 100x1
-        dE2f = dE2fg #1960x1
+        # dE2fg = np.dot(W3g.T, dC3g) #1960x100 100x1
+        # dE2f = dE2fg #1960x1
+
+        dE2f = np.transpose(W3) @ dC3 #1960x100 100x1      
+        # dE2 = dE2f.reshape((14, 14, 10), order='F') #14x14x10
+        dE2 = np.reshape(np.transpose(dE2f), (14,14,10), order='F') #14x14x10
         
-        dE2 = dE2f.reshape((14, 14, 10), order='F') #14x14x10
         dF2 = np.sign(Y2) #14x14x10 
         dC2 = dE2 * dF2 #14x14x10
         
@@ -789,11 +849,13 @@ for K in range(0, iteraciones):
                     dCs2[q1, q2] = dC2[13 - q1, 13 - q2, km]
             
             for kd in range(cnn_D2): # cnn_D2 = 10
+                abx1 = - LR * convolve2d(X2[:, :, kd-1], dCs2, mode='valid') #3x3x10x10
+                
                 # Realizar la operación de convolución y actualizar dW2
                 dW2[:, :, kd, km] = -LR * convolve2d(X2[:, :, kd-1], dCs2, mode='valid') #3x3x10x10
             
             # Calcular y actualizar dB2
-            dB2[km] = -LR * np.sum(dCs2) #10x1
+            dB2[km] = -LR * np.sum(np.sum(dCs2)) #10x1
             
         dE1p = np.zeros_like(X2) #16x16x10
 
@@ -832,7 +894,7 @@ for K in range(0, iteraciones):
                 dW1[:, :, kd, km] = -LR * convolve2d(X1[:, :, kd], dCs1, mode='valid') #5x5x10x10
 
             # Calcular y actualizar dB1
-            dB1[km] = -LR * np.sum(dCs1)
+            dB1[km] = -LR * np.sum(np.sum(dCs1))
 
         dE0p = np.zeros_like(X1) #20x20x10
 
@@ -857,7 +919,7 @@ for K in range(0, iteraciones):
                     dCs0[q1, q2] = dC0[19 - q1, 19 - q2, km]
             for kd in range(cnn_D0): # cnn_D0 = 1
                 dW0[:, :, kd, km] = -LR * convolve2d(X0, dCs0, mode='valid')
-            dB0[km] = -LR * np.sum(dCs0)
+            dB0[km] = -LR * np.sum(np.sum(dCs0))
             
         if np.isnan(dW0).any():
             print('NaN')
@@ -900,19 +962,3 @@ for K in range(0, iteraciones):
 
         W0 += dW0 #9x9x1x10 
         B0 += dB0 #10x1
-
-
-# # Tomar una imagen de ejemplo
-# digit = x[0]
-# digit_pixels = digit.reshape(28, 28)
-
-# # Visualizar la imagen
-# plt.imshow(digit_pixels, cmap='gray')
-# plt.show()
-
-# W=1/100*np.ones((10,10));
-
-# convolve2d(digit_pixels, W, mode='valid')
-
-# plt.imshow(convolve2d(digit_pixels, W, mode='valid'), cmap='gray')
-# plt.show()
