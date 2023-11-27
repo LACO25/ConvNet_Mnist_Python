@@ -42,8 +42,8 @@ def loadDataset(fileName, samples):
 
     return x, y
 
-ruta_archivo_train = "C:\\Users\\luisc\\Downloads\\Luis\\Luis_personal\\Semestre_11\\Almacenamiento de datos\\Proyecto_CIFAR100\\mnist_train.csv"
-ruta_archivo_test = "C:\\Users\\luisc\\Downloads\\Luis\\Luis_personal\\Semestre_11\\Almacenamiento de datos\\Proyecto_CIFAR100\\mnist_test.csv"
+ruta_archivo_train = "mnist_train.csv"
+ruta_archivo_test = "mnist_test.csv"
 # Intenta cargar los datos de entrenamiento
 try:
     Amnist, y = loadDataset(ruta_archivo_train, 60000)
@@ -124,7 +124,7 @@ sourc = np.zeros((iteraciones, 2))  # Input image source
 temporal = 1
 
 # for K in range(1, iteraciones + 1):
-for K in range(0, iteraciones):
+for K in range(0, 5):
 
     # Incremento de la tasa de aprendizaje
     # LR += 0.2000e-07
@@ -962,3 +962,91 @@ for K in range(0, iteraciones):
 
         W0 += dW0 #9x9x1x10 
         B0 += dB0 #10x1
+
+
+
+#
+# -----------------------------------------------------
+#     Se almacenan las variables W en diccionarios
+# -----------------------------------------------------
+#
+
+W0_res = {'W0': W0}
+W1_res = {'W1': W1}
+W2_res = {'W2': W2}
+W3_res = {'W3': W3}
+W4_res = {'W4': W4}
+W5_res = {'W5': W5}
+
+#
+# ----------------------------------------------------
+#     Se almacenan las variables B en diccionarios
+# ----------------------------------------------------
+#
+
+B0_res = {'B0': B0}
+B1_res = {'B1': B1}
+B2_res = {'B2': B2}
+B3_res = {'B3': B3}
+B4_res = {'B4': B4}
+B5_res = {'B5': B5}
+    
+#
+# --------------------------------------------------------------------------
+#    Se guardan las variables W en archivos mediante la libreria "pickle"
+# --------------------------------------------------------------------------
+#
+
+with open('W0.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(W0_res, archivo)
+
+with open('W1.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(W1_res, archivo)
+
+with open('W2.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(W2_res, archivo)
+
+with open('W3.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(W3_res, archivo)
+
+with open('W4.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(W4_res, archivo)
+
+with open('W5.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(W5_res, archivo)
+
+#
+# --------------------------------------------------------------------------
+#    Se guardan las variables B en archivos mediante la libreria "pickle"
+# --------------------------------------------------------------------------
+#
+
+with open('B0.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(B0_res, archivo)
+        
+with open('B1.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(B1_res, archivo)
+
+with open('B2.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(B2_res, archivo)
+
+with open('B3.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(B3_res, archivo)
+
+with open('B4.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(B4_res, archivo)
+
+with open('B5.pkl', 'wb') as archivo:
+    # Guardar la variable en el archivo
+    pickle.dump(B5_res, archivo)
