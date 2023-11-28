@@ -107,7 +107,7 @@ Z1 = np.zeros((28, 28, 1))  # Variable used for displaying the input image in th
 
 if test_set == 0:
     # Iterations for training the CNN
-    iteraciones = 500000
+    iteraciones = 100000
 else:
     # Iterations for test after training the CNN
     iteraciones = 5000
@@ -124,7 +124,7 @@ sourc = np.zeros((iteraciones, 2))  # Input image source
 temporal = 1
 
 # for K in range(1, iteraciones + 1):
-for K in range(0, 5):
+for K in range(0, iteraciones):
 
     # Incremento de la tasa de aprendizaje
     # LR += 0.2000e-07
